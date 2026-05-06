@@ -127,22 +127,12 @@ define method .control()
 	ENDDO
 endmethod
 define method .gpartcreate(!RecScom is STRING,!RecGpartLevel is STRING,!RecCommodity is STRING,!RecCommodityDesc is STRING,!RecSch is STRING,!RecSchDesc is STRING,!RecGpart is STRING,!RecGpartDesc is STRING)
+	/PRTWLD-TEKCATALOG
 	/$!RecGpartLevel
 	handle ANY
+		/PRTWLD-TEKCATALOG
 		NEW PRTELE /$!RecGpartLevel
 		PURP PIPE
-	ENDHANDLE
-	/$!RecCommodity
-	handle ANY
-		NEW PRTELE /$!RecCommodity
-		PURP PIPE
-		DESC '$!RecCommodityDesc'
-	ENDHANDLE
-	/$!RecSch
-	handle ANY
-		NEW PRTELE /$!RecSch
-		PURP PIPE
-		DESC '$!RecSchDesc'
 	ENDHANDLE
 	/$!RecGpart
 		handle ANY
@@ -168,8 +158,10 @@ define method .gpartcreate(!RecScom is STRING,!RecGpartLevel is STRING,!RecCommo
 		ENDHANDLE
 endmethod
 define method .catecreate(!RecCate is STRING,!RecGtype is STRING,!RecSectLevel is STRING,!RecCateDesc is STRING )
+	/CATA-TEKCATALOG
 	/$!RecSectLevel
 	handle ANY
+		/CATA-TEKCATALOG
 		NEW SECT /$!RecSectLevel
 		PURP PIPE
 	ENDHANDLE
