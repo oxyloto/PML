@@ -11,10 +11,15 @@ setup form !!TEKCatalogGrid dialog docking
   !this.gridPopup.add('CALLBACK', 'Import from Excel...', '!this.loadFromExcel()')
   !this.gridPopup.add('CALLBACK', 'Import from TXT...', '!this.loadFromTXT()')
   !this.gridPopup.add('CALLBACK', 'Import from DB...', '!this.loadFromDB()')
-  container .gridFrame NOBOX PMLNETCONTROL 'grid' anchor all width 60 height 20
+  container .gridFrame NOBOX PMLNETCONTROL 'grid' anchor left right top width 60 height 20
   path down
   button .load |Create...| at x 0 ymax call |!this.control()| wid 8
-  member .grid     is NETGRIDCONTROL
+  button .check |Check Status| at xmax ymin call |!this.checkStatus()| wid 12
+  button .exportBtn |Export...| at xmax ymin call |!this.exportResults()| wid 10
+  container .resultFrame NOBOX PMLNETCONTROL 'resultGrid' at x 0 ymax anchor left right bottom width 60 height 10
+  member .grid        is NETGRIDCONTROL
+  member .resultGrid  is NETGRIDCONTROL
+  member .statusRows  is ARRAY
   member .elements is ARRAY
   member .cate is ARRAY
   member .scom is ARRAY
@@ -31,6 +36,8 @@ define method .TEKCatalogGrid()
   !this.grid.addeventhandler('OnPopup', !this, 'rightClickGrid')
   !this.grid.addeventhandler('AfterSelectChange', !this, 'afterSelectChange')
   !this.grid.addeventhandler('BeforeCellUpdate', !this, 'beforeCellUpdate')
+  !this.resultGrid = object NetGridControl()
+  !this.resultFrame.control = !this.resultGrid.handle()
 endmethod
 
 define method .init()
@@ -43,6 +50,11 @@ define method .init()
   !this.grid.columnSummaries(TRUE)
   !this.grid.autoFitColumns()
   !this.grid.editableGrid(TRUE)
+  !this.resultGrid.fixedHeaders(FALSE)
+  !this.resultGrid.fixedRows(FALSE)
+  !this.resultGrid.autoFitColumns()
+  !this.resultGrid.editableGrid(FALSE)
+  !this.resultGrid.columnExcelFilter(TRUE)
 endmethod
 
 define method .rightClickGrid(!data is ARRAY)
@@ -299,4 +311,96 @@ define method .beforeCellUpdate(!data is ARRAY)
 	q var !data
 	!this.grid.doDabaconCellUpdate(!data)
 
+endmethod
+
+define method .checkStatus()
+  using namespace 'Aveva.Core.Presentation'
+  !NumberOfRecords = !this.grid.getNumberRows()
+  if !NumberOfRecords eq 0 then
+    !!alert.message('No data loaded. Please load data first.')
+    return
+  endif
+
+  !headers = object Array()
+  !headers.append('GPART')
+  !headers.append('GPART STATUS')
+  !headers.append('SCOM')
+  !headers.append('SCOM STATUS')
+  !headers.append('CATE')
+  !headers.append('CATE STATUS')
+
+  !this.statusRows = object Array()
+
+  DO !n FROM 1 TO !NumberOfRecords
+    !CurrentValues = !this.grid.getRow('$!n')
+    !RecGpart = !CurrentValues[1]
+    !RecScom  = !CurrentValues[12]
+    !RecCate  = !CurrentValues[10]
+
+    !gpartStatus = 'NEW'
+    /$!RecGpart
+    handle ANY
+    elsehandle none
+      !gpartStatus = 'EXIST'
+    endhandle
+
+    !scomStatus = 'NEW'
+    /$!RecScom
+    handle ANY
+    elsehandle none
+      !scomStatus = 'EXIST'
+    endhandle
+
+    !cateStatus = 'NEW'
+    /$!RecCate
+    handle ANY
+    elsehandle none
+      !cateStatus = 'EXIST'
+    endhandle
+
+    !row = object Array()
+    !row.append(!RecGpart)
+    !row.append(!gpartStatus)
+    !row.append(!RecScom)
+    !row.append(!scomStatus)
+    !row.append(!RecCate)
+    !row.append(!cateStatus)
+    !this.statusRows.append(!row)
+  ENDDO
+
+  !nds = object NETDATASOURCE('Status Check', !headers, !this.statusRows)
+  !this.resultGrid.clearGrid()
+  !this.resultGrid.BindToDataSource(!nds)
+  !this.resultGrid.autoFitColumns()
+endmethod
+
+define method .exportResults()
+  if !this.statusRows.size() eq 0 then
+    !!alert.message('No status data. Run Check Status first.')
+    return
+  endif
+
+  import 'PMLFileBrowser'
+  handle ANY
+  endhandle
+  using namespace 'Aveva.Core.Presentation'
+  !browser = object PMLFILEBROWSER('SAVE')
+  !browser.show('C:\','status_check','Export Status',true,'CSV Files|*.csv',1)
+  !filePath = !browser.file()
+  if !filePath eq '' then
+    return
+  endif
+
+  !lines = object Array()
+  !lines.append('GPART,GPART STATUS,SCOM,SCOM STATUS,CATE,CATE STATUS')
+
+  DO !n FROM 1 TO !this.statusRows.size()
+    !row = !this.statusRows[!n]
+    !line = !row[1] + ',' + !row[2] + ',' + !row[3] + ',' + !row[4] + ',' + !row[5] + ',' + !row[6]
+    !lines.append(!line)
+  ENDDO
+
+  !file = object File(!filePath)
+  !file.WriteFile(!lines)
+  !!alert.message('Export complete: ' + !filePath)
 endmethod
