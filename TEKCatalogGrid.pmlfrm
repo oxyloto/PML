@@ -173,12 +173,16 @@ define method .gpartcreate(!RecScom is STRING,!RecGpart is STRING,!RecGpartDesc 
 		PURP PIPE
 		DESC '$!RecPrtele5Desc'
 	ENDHANDLE
-	/$!RecGpart
+		/$!RecGpart
 		handle ANY
 			!References= !!Collectallfor('GPART','', !!CE)
 			if !References.size() gt 0 then
-				!RefDETR = !References[1].DETR.name
-				!RefMATX = !References[1].MATX.name
+				if !References[1].DETR.unset().not() then
+					!RefDETR = !References[1].DETR.name
+				endif
+				if !References[1].MATX.unset().not() then
+					!RefMATX = !References[1].MATX.name
+				endif
 			endif
 			NEW GPART /$!RecGpart
 			DESC '$!RecGpartDesc'
@@ -188,8 +192,12 @@ define method .gpartcreate(!RecScom is STRING,!RecGpart is STRING,!RecGpartDesc 
 			CATR SCOMPONENT /$!RecScom
 			--DETR VE MATX BILGISI EGER PRTELE ALTINDA VAR OLAN GPART VAR ISE ORADAKI DETR VE MATX KULLANILACAK
 			if !References.size() gt 0 then
-				DETR SDTEXT /$!RefDETR
-				MATX SMTEXT /$!RefMATX
+				if !RefDETR.unset().not() then
+					DETR SDTEXT /$!RefDETR
+				endif
+				if !RefMATX.unset().not() then
+					MATX SMTEXT /$!RefMATX
+				endif
 			endif
 		elsehandle none
 			!This.gpart[!This.sayGpart] = '$!RecGpart'
