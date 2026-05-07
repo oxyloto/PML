@@ -175,6 +175,8 @@ define method .gpartcreate(!RecScom is STRING,!RecGpart is STRING,!RecGpartDesc 
 	ENDHANDLE
 		/$!RecGpart
 		handle ANY
+			!RefDETR = ''
+			!RefMATX = ''
 			!References= !!Collectallfor('GPART','', !!CE)
 			if !References.size() gt 0 then
 				if !References[1].DETR.unset().not() then
@@ -191,13 +193,11 @@ define method .gpartcreate(!RecScom is STRING,!RecGpart is STRING,!RecGpartDesc 
 			--- SCOM BILDIGISI GPART BAZLI GELMELI
 			CATR SCOMPONENT /$!RecScom
 			--DETR VE MATX BILGISI EGER PRTELE ALTINDA VAR OLAN GPART VAR ISE ORADAKI DETR VE MATX KULLANILACAK
-			if !References.size() gt 0 then
-				if !RefDETR.unset().not() then
-					DETR SDTEXT /$!RefDETR
-				endif
-				if !RefMATX.unset().not() then
-					MATX SMTEXT /$!RefMATX
-				endif
+			if !RefDETR neq '' then
+				DETR SDTEXT /$!RefDETR
+			endif
+			if !RefMATX neq '' then
+				MATX SMTEXT /$!RefMATX
 			endif
 		elsehandle none
 			!This.gpart[!This.sayGpart] = '$!RecGpart'
