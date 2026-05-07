@@ -4,7 +4,7 @@ setup form !!TEKCatalogGrid dialog docking
   endhandle
   using namespace 'Aveva.Core.Presentation'
 
-  !this.formTitle = |Example .NET Grid Control Import|
+  !this.formTitle = |TEK Catalog Grid|
   !this.initcall  = |!this.init()|
 
   !this.newMenu(|gridPopup|)
@@ -13,20 +13,20 @@ setup form !!TEKCatalogGrid dialog docking
   !this.gridPopup.add('CALLBACK', 'Import from DB...', '!this.loadFromDB()')
   container .gridFrame NOBOX PMLNETCONTROL 'grid' anchor all width 60 height 20
   path down
-  button .load     |Create...|      at x 0    ymax call |!this.control()|      wid 8
-  button .check    |Check Status|   at xmax   ymin call |!this.checkStatus()|  wid 12
-  button .exportBtn |Export...|     at xmax   ymin call |!this.exportResults()| wid 10
+  button .load     |Create...|     at x 0   ymax call |!this.control()|       wid 8
+  button .check    |Check Status|  at xmax  ymin call |!this.checkStatus()|   wid 12
+  button .expbtn   |Export...|     at xmax  ymin call |!this.exportResults()| wid 10
   container .resultFrame NOBOX PMLNETCONTROL 'resultGrid' at x 0 ymax width 60 height 10
-  member .grid        is NETGRIDCONTROL
-  member .resultGrid  is NETGRIDCONTROL
-  member .statusRows  is ARRAY
-  member .elements is ARRAY
-  member .cate is ARRAY
-  member .scom is ARRAY
-  member .commodity is ARRAY
-  member .gpart is ARRAY
-  member .sayScom is REAL
-  member .sayGpart is REAL
+  member .grid       is NETGRIDCONTROL
+  member .resultGrid is NETGRIDCONTROL
+  member .statusRows is ARRAY
+  member .elements   is ARRAY
+  member .cate       is ARRAY
+  member .scom       is ARRAY
+  member .commodity  is ARRAY
+  member .gpart      is ARRAY
+  member .sayScom    is REAL
+  member .sayGpart   is REAL
 exit
 
 define method .TEKCatalogGrid()
@@ -38,10 +38,12 @@ define method .TEKCatalogGrid()
   !this.grid.addeventhandler('BeforeCellUpdate', !this, 'beforeCellUpdate')
   !this.resultGrid = object NetGridControl()
   !this.resultFrame.control = !this.resultGrid.handle()
+  handle ANY
+  endhandle
 endmethod
 
 define method .init()
-  using namespace  'Aveva.Core.Presentation'
+  using namespace 'Aveva.Core.Presentation'
   !this.grid.columnExcelFilter(TRUE)
   !this.grid.setNameColumnImage()
   !this.grid.outlookGroupStyle(TRUE)
@@ -55,6 +57,8 @@ define method .init()
   !this.resultGrid.autoFitColumns()
   !this.resultGrid.editableGrid(FALSE)
   !this.resultGrid.columnExcelFilter(TRUE)
+  handle ANY
+  endhandle
 endmethod
 
 define method .rightClickGrid(!data is ARRAY)
@@ -66,234 +70,247 @@ define method .rightClickGrid(!data is ARRAY)
 endmethod
 
 define method .loadFromExcel()
-   import 'PMLFileBrowser'
-   handle ANY
-   endhandle
-   using namespace 'Aveva.Core.Presentation'
-   !browser = object PMLFILEBROWSER('OPEN')
-   !browser.show('C:\','','Load Grid from Excel',true, 'Excel Documents|*.xlsx',1)
-   !this.grid.clearGrid()
-   !nds = object NETDATASOURCE('Grid Control Example', !browser.file())
-   !this.grid.BindToDataSource(!nds)
-   handle ANY
-	!!alert.error ( |The Gpart list can not be read!| )
-   elsehandle none
-	!This.sayScom = 1
-	!This.sayGpart = 1
-   endhandle
+  import 'PMLFileBrowser'
+  handle ANY
+  endhandle
+  using namespace 'Aveva.Core.Presentation'
+  !browser = object PMLFILEBROWSER('OPEN')
+  !browser.show('C:\','','Load Grid from Excel',true, 'Excel Documents|*.xlsx',1)
+  !this.grid.clearGrid()
+  !nds = object NETDATASOURCE('Grid Control Example', !browser.file())
+  !this.grid.BindToDataSource(!nds)
+  handle ANY
+    !!alert.error( |The Gpart list can not be read!| )
+  elsehandle none
+    !This.sayScom  = 1
+    !This.sayGpart = 1
+  endhandle
 endmethod
+
 define method .control()
-	!NumberOfRecords = !this.grid.getNumberRows()
+  !NumberOfRecords = !this.grid.getNumberRows()
 
-	DO !n FROM 1 TO !NumberOfRecords
-		!CurrentValues   = !this.grid.getRow('$!n')
-		!RecGpart        = !CurrentValues[1]
-		!RecGpartDesc    = !CurrentValues[2]
-		!RecGtype        = !CurrentValues[3]
-		!RecPrtwld       = !CurrentValues[4]
-		!RecPrtele1      = !CurrentValues[5]
-		!RecPrtele2      = !CurrentValues[6]
-		!RecPrtele3      = !CurrentValues[7]
-		!RecPrtele4      = !CurrentValues[8]
-		!RecPrtele4Desc  = !CurrentValues[9]
-		!RecPrtele5      = !CurrentValues[10]
-		!RecPrtele5Desc  = !CurrentValues[11]
-		!RecCata         = !CurrentValues[12]
-		!RecSect         = !CurrentValues[13]
-		!RecCateCode     = !CurrentValues[14]
-		!RecCateDesc     = !CurrentValues[15]
-		!RecScom         = !CurrentValues[16]
+  DO !n FROM 1 TO !NumberOfRecords
+    !CurrentValues  = !this.grid.getRow('$!n')
+    !RecGpart       = !CurrentValues[1]
+    !RecGpartDesc   = !CurrentValues[2]
+    !RecGtype       = !CurrentValues[3]
+    !RecPrtwld      = !CurrentValues[4]
+    !RecPrtele1     = !CurrentValues[5]
+    !RecPrtele2     = !CurrentValues[6]
+    !RecPrtele3     = !CurrentValues[7]
+    !RecPrtele4     = !CurrentValues[8]
+    !RecPrtele4Desc = !CurrentValues[9]
+    !RecPrtele5     = !CurrentValues[10]
+    !RecPrtele5Desc = !CurrentValues[11]
+    !RecCata        = !CurrentValues[12]
+    !RecSect        = !CurrentValues[13]
+    !RecCateCode    = !CurrentValues[14]
+    !RecCateDesc    = !CurrentValues[15]
+    !RecScom        = !CurrentValues[16]
 
-		/$!RecCateCode
-		handle ANY
-			!this.catecreate(!RecCata,!RecSect,!RecCateCode,!RecCateDesc,!RecGtype)
-			/$!RecScom
-			handle ANY
-				!this.catescom(!RecCateCode,!RecScom,!RecGtype)
-				!this.gpartcreate(!RecScom,!RecGpart,!RecGpartDesc,!RecPrtwld,!RecPrtele1,!RecPrtele2,!RecPrtele3,!RecPrtele4,!RecPrtele4Desc,!RecPrtele5,!RecPrtele5Desc)
-			elsehandle none
-				!This.scom[!This.sayScom] = !RecScom
-				!This.sayScom = !This.sayScom + 1
-			endhandle
-		elsehandle none
-			/$!RecScom
-			handle ANY
-				!this.catescom(!RecCateCode,!RecScom,!RecGtype)
-				!this.gpartcreate(!RecScom,!RecGpart,!RecGpartDesc,!RecPrtwld,!RecPrtele1,!RecPrtele2,!RecPrtele3,!RecPrtele4,!RecPrtele4Desc,!RecPrtele5,!RecPrtele5Desc)
-			elsehandle none
-				!This.scom[!This.sayScom] = !RecScom
-				!This.sayScom = !This.sayScom + 1
-				!this.gpartcreate(!RecScom,!RecGpart,!RecGpartDesc,!RecPrtwld,!RecPrtele1,!RecPrtele2,!RecPrtele3,!RecPrtele4,!RecPrtele4Desc,!RecPrtele5,!RecPrtele5Desc)
-			endhandle
-		endhandle
-	ENDDO
+    /$!RecCateCode
+    handle ANY
+      !this.catecreate(!RecCata,!RecSect,!RecCateCode,!RecCateDesc,!RecGtype)
+      /$!RecScom
+      handle ANY
+        !this.catescom(!RecCateCode,!RecScom,!RecGtype)
+        !this.gpartcreate(!RecScom,!RecGpart,!RecGpartDesc,!RecPrtwld, $,
+                          !RecPrtele1,!RecPrtele2,!RecPrtele3, $,
+                          !RecPrtele4,!RecPrtele4Desc,!RecPrtele5,!RecPrtele5Desc)
+      elsehandle none
+        !This.scom[!This.sayScom] = !RecScom
+        !This.sayScom = !This.sayScom + 1
+      endhandle
+    elsehandle none
+      /$!RecScom
+      handle ANY
+        !this.catescom(!RecCateCode,!RecScom,!RecGtype)
+        !this.gpartcreate(!RecScom,!RecGpart,!RecGpartDesc,!RecPrtwld, $,
+                          !RecPrtele1,!RecPrtele2,!RecPrtele3, $,
+                          !RecPrtele4,!RecPrtele4Desc,!RecPrtele5,!RecPrtele5Desc)
+      elsehandle none
+        !This.scom[!This.sayScom] = !RecScom
+        !This.sayScom = !This.sayScom + 1
+        !this.gpartcreate(!RecScom,!RecGpart,!RecGpartDesc,!RecPrtwld, $,
+                          !RecPrtele1,!RecPrtele2,!RecPrtele3, $,
+                          !RecPrtele4,!RecPrtele4Desc,!RecPrtele5,!RecPrtele5Desc)
+      endhandle
+    endhandle
+  ENDDO
 endmethod
-define method .gpartcreate(!RecScom is STRING,!RecGpart is STRING,!RecGpartDesc is STRING,!RecPrtwld is STRING,!RecPrtele1 is STRING,!RecPrtele2 is STRING,!RecPrtele3 is STRING,!RecPrtele4 is STRING,!RecPrtele4Desc is STRING,!RecPrtele5 is STRING,!RecPrtele5Desc is STRING)
-	-- Level 1 PRTELE under PRTWLD
-	/$!RecPrtele1
-	handle ANY
-		/$!RecPrtwld
-		NEW PRTELE /$!RecPrtele1
-		PURP PIPE
-	ENDHANDLE
-	-- Level 2 PRTELE under PRTELE1
-	/$!RecPrtele2
-	handle ANY
-		/$!RecPrtele1
-		NEW PRTELE /$!RecPrtele2
-		PURP PIPE
-	ENDHANDLE
-	-- Level 3 PRTELE under PRTELE2
-	/$!RecPrtele3
-	handle ANY
-		/$!RecPrtele2
-		NEW PRTELE /$!RecPrtele3
-		PURP PIPE
-	ENDHANDLE
-	-- Level 4 PRTELE (COMMODITY) under PRTELE3
-	/$!RecPrtele4
-	handle ANY
-		/$!RecPrtele3
-		NEW PRTELE /$!RecPrtele4
-		PURP PIPE
-		DESC '$!RecPrtele4Desc'
-	ENDHANDLE
-	-- Level 5 PRTELE (COMwSCH) under PRTELE4 - direct parent of GPART
-	/$!RecPrtele5
-	handle ANY
-		/$!RecPrtele4
-		NEW PRTELE /$!RecPrtele5
-		PURP PIPE
-		DESC '$!RecPrtele5Desc'
-	ENDHANDLE
-	/$!RecGpart
-		handle ANY
-			!References= !!Collectallfor('GPART','', !!CE)
-			if !References.size() gt 0 then
-				!RefDETR = !References[1].DETR.name
-				!RefMATX = !References[1].MATX.name
-			endif
-			NEW GPART /$!RecGpart
-			DESC '$!RecGpartDesc'
-			END
-			OLD GPART /$!RecGpart
-			--- SCOM BILDIGISI GPART BAZLI GELMELI
-			CATR SCOMPONENT /$!RecScom
-			--DETR VE MATX BILGISI EGER PRTELE ALTINDA VAR OLAN GPART VAR ISE ORADAKI DETR VE MATX KULLANILACAK
-			if !References.size() gt 0 then
-				DETR SDTEXT /$!RefDETR
-				MATX SMTEXT /$!RefMATX
-			endif
-		elsehandle none
-			!This.gpart[!This.sayGpart] = '$!RecGpart'
-			!This.sayGpart = !This.sayGpart + 1
-		ENDHANDLE
+
+define method .gpartcreate(!RecScom is STRING,!RecGpart is STRING, $,
+                            !RecGpartDesc is STRING,!RecPrtwld is STRING, $,
+                            !RecPrtele1 is STRING,!RecPrtele2 is STRING, $,
+                            !RecPrtele3 is STRING,!RecPrtele4 is STRING, $,
+                            !RecPrtele4Desc is STRING,!RecPrtele5 is STRING, $,
+                            !RecPrtele5Desc is STRING)
+  -- Level 1 PRTELE under PRTWLD
+  /$!RecPrtele1
+  handle ANY
+    /$!RecPrtwld
+    NEW PRTELE /$!RecPrtele1
+    PURP PIPE
+  ENDHANDLE
+  -- Level 2 PRTELE under PRTELE1
+  /$!RecPrtele2
+  handle ANY
+    /$!RecPrtele1
+    NEW PRTELE /$!RecPrtele2
+    PURP PIPE
+  ENDHANDLE
+  -- Level 3 PRTELE under PRTELE2
+  /$!RecPrtele3
+  handle ANY
+    /$!RecPrtele2
+    NEW PRTELE /$!RecPrtele3
+    PURP PIPE
+  ENDHANDLE
+  -- Level 4 PRTELE (COMMODITY) under PRTELE3
+  /$!RecPrtele4
+  handle ANY
+    /$!RecPrtele3
+    NEW PRTELE /$!RecPrtele4
+    PURP PIPE
+    DESC '$!RecPrtele4Desc'
+  ENDHANDLE
+  -- Level 5 PRTELE (COMwSCH) under PRTELE4 - direct parent of GPART
+  /$!RecPrtele5
+  handle ANY
+    /$!RecPrtele4
+    NEW PRTELE /$!RecPrtele5
+    PURP PIPE
+    DESC '$!RecPrtele5Desc'
+  ENDHANDLE
+  /$!RecGpart
+  handle ANY
+    !References = !!Collectallfor('GPART','', !!CE)
+    if !References.size() gt 0 then
+      !RefDETR = !References[1].DETR.name
+      !RefMATX = !References[1].MATX.name
+    endif
+    NEW GPART /$!RecGpart
+    DESC '$!RecGpartDesc'
+    END
+    OLD GPART /$!RecGpart
+    CATR SCOMPONENT /$!RecScom
+    if !References.size() gt 0 then
+      DETR SDTEXT /$!RefDETR
+      MATX SMTEXT /$!RefMATX
+    endif
+  elsehandle none
+    !This.gpart[!This.sayGpart] = '$!RecGpart'
+    !This.sayGpart = !This.sayGpart + 1
+  ENDHANDLE
 endmethod
-define method .catecreate(!RecCata is STRING,!RecSect is STRING,!RecCateCode is STRING,!RecCateDesc is STRING,!RecGtype is STRING)
-	/$!RecSect
-	handle ANY
-		/$!RecCata
-		NEW SECT /$!RecSect
-		PURP PIPE
-	ENDHANDLE
-	NEW CATEGORY /$!RecCateCode
-		DESC '$!RecCateDesc'
-		PURP COMP
-		GTYP $!RecGtype
-		NEW TEXT /$!RecCateCode-PA1
-			STEX 'NOMINAL BORE'
-		END
-		NEW SDTEXT /$!RecCateCode-D
-		END
-		NEW DTSET /$!RecCateCode-DTSE
-		END
-	/$!RecCateCode-DTSE
-		NEW DATA /$!RecCateCode-DATA-PA1
-			DKEY APAR
-			PPRO ( ATTRIB PARA[1 ] )
-			PURP DATA
-			NUMB 1
-			DTIT 'NOMINAL SIZE'
-		END
-	/$!RecCateCode-DTSE
-		NEW PTSET /$!RecCateCode-P
-		END
-		NEW GMSET /$!RecCateCode-G
-		END
-	END
-	/$!RecCateCode
-		Ptref /$!RecCateCode-P
-		Dtref /$!RecCateCode-DTSE
-		Gmref /$!RecCateCode-G
-		Cdetail /$!RecCateCode-D
+
+define method .catecreate(!RecCata is STRING,!RecSect is STRING, $,
+                           !RecCateCode is STRING,!RecCateDesc is STRING, $,
+                           !RecGtype is STRING)
+  /$!RecSect
+  handle ANY
+    /$!RecCata
+    NEW SECT /$!RecSect
+    PURP PIPE
+  ENDHANDLE
+  NEW CATEGORY /$!RecCateCode
+    DESC '$!RecCateDesc'
+    PURP COMP
+    GTYP $!RecGtype
+    NEW TEXT /$!RecCateCode-PA1
+      STEX 'NOMINAL BORE'
+    END
+    NEW SDTEXT /$!RecCateCode-D
+    END
+    NEW DTSET /$!RecCateCode-DTSE
+    END
+  /$!RecCateCode-DTSE
+    NEW DATA /$!RecCateCode-DATA-PA1
+      DKEY APAR
+      PPRO ( ATTRIB PARA[1 ] )
+      PURP DATA
+      NUMB 1
+      DTIT 'NOMINAL SIZE'
+    END
+  /$!RecCateCode-DTSE
+    NEW PTSET /$!RecCateCode-P
+    END
+    NEW GMSET /$!RecCateCode-G
+    END
+  END
+  /$!RecCateCode
+    Ptref /$!RecCateCode-P
+    Dtref /$!RecCateCode-DTSE
+    Gmref /$!RecCateCode-G
+    Cdetail /$!RecCateCode-D
 endmethod
 
 define method .catescom(!RecCateCode is STRING,!RecScom is STRING,!RecGtype is STRING)
-	/$!RecScom
-	handle ANY
-	/$!RecCateCode
-		!References= !!Collectallfor('GMSE BTSE PTSE SDTE DTSE','', !!CE)
-		Do !Reference values !References
-			if !Reference.type eq 'DTSE' then
-				!DTRE = !Reference.name
-			endif
-			if !Reference.type eq 'PTSE' then
-				!PTRE = !Reference.name
-			endif
-			if !Reference.type eq 'GMSE' then
-				!GMRE = !Reference.name
-			endif
-			if !Reference.type eq 'BTSE' then
-				!Blrfarray = !Reference.name
-			endif
-		enddo
-		if !!ce.ptref.unset().not() then
-			!PTRE = !!ce.ptref.name
-		endif
-		if !!ce.gmref.unset().not() then
-			!GMRE = !!ce.gmref.name
-		endif
-		if !!ce.dtref.unset().not() then
-			!DTRE = !!ce.dtref.name
-		endif
-		ONERROR GOLABEL /ERROR3
-		INPUT BEGIN
-			NEW SCOMPONENT /$!RecScom
-				GTYP $!RecGtype
-			END
-			OLD SCOMPONENT /$!RecScom
-			-- BUNLARIN TAMAMI CATE'DEN GELECEK, CATE HANGILERINE BAGLIYSA ORADAN ALACAK
-			PTRE PTSET $!PTRE
-			GMRE GMSET $!GMRE
-			DTRE DTSET $!DTRE
-			INPUT END  SCOMPONENT /$!RecScom
-			INPUT FINISH
-		-- Switch synonyms back on if an error occurs.
-		LABEL /ERROR3
-		handle ANY
-		$S+
-		RETURN ERROR
-		endhandle
-	endhandle
+  /$!RecScom
+  handle ANY
+  /$!RecCateCode
+    !References = !!Collectallfor('GMSE BTSE PTSE SDTE DTSE','', !!CE)
+    Do !Reference values !References
+      if !Reference.type eq 'DTSE' then
+        !DTRE = !Reference.name
+      endif
+      if !Reference.type eq 'PTSE' then
+        !PTRE = !Reference.name
+      endif
+      if !Reference.type eq 'GMSE' then
+        !GMRE = !Reference.name
+      endif
+      if !Reference.type eq 'BTSE' then
+        !Blrfarray = !Reference.name
+      endif
+    enddo
+    if !!ce.ptref.unset().not() then
+      !PTRE = !!ce.ptref.name
+    endif
+    if !!ce.gmref.unset().not() then
+      !GMRE = !!ce.gmref.name
+    endif
+    if !!ce.dtref.unset().not() then
+      !DTRE = !!ce.dtref.name
+    endif
+    ONERROR GOLABEL /ERROR3
+    INPUT BEGIN
+      NEW SCOMPONENT /$!RecScom
+        GTYP $!RecGtype
+      END
+      OLD SCOMPONENT /$!RecScom
+      PTRE PTSET $!PTRE
+      GMRE GMSET $!GMRE
+      DTRE DTSET $!DTRE
+      INPUT END SCOMPONENT /$!RecScom
+      INPUT FINISH
+    LABEL /ERROR3
+    handle ANY
+    $S+
+    RETURN ERROR
+    endhandle
+  endhandle
 endmethod
+
 define method .loadFromTXT()
-   import 'PMLFileBrowser'
-   handle ANY
-   endhandle
-   using namespace 'Aveva.Core.Presentation'
-	!browser = object PMLFILEBROWSER('OPEN')
-	!browser.show('C:\','','Load Grid from TXT',true, 'TXT Documents|*.txt',1)
-	!this.grid.clearGrid()
-	!file = object File(!browser.file())
-	!lines = !file.ReadFile()
-	!data = Array()
-	do !i Index !lines
-		skip if (!i eq 1 )
-		!line = !lines[!i].Split()
-		!data.Append(!line)
-	enddo
-   !nds = object NETDATASOURCE('Grid Control Example', !lines[1].Split() , !data)
-	!this.grid.BindToDataSource(!nds)
+  import 'PMLFileBrowser'
+  handle ANY
+  endhandle
+  using namespace 'Aveva.Core.Presentation'
+  !browser = object PMLFILEBROWSER('OPEN')
+  !browser.show('C:\','','Load Grid from TXT',true, 'TXT Documents|*.txt',1)
+  !this.grid.clearGrid()
+  !file = object File(!browser.file())
+  !lines = !file.ReadFile()
+  !data = Array()
+  do !i Index !lines
+    skip if (!i eq 1)
+    !line = !lines[!i].Split()
+    !data.Append(!line)
+  enddo
+  !nds = object NETDATASOURCE('Grid Control Example', !lines[1].Split(), !data)
+  !this.grid.BindToDataSource(!nds)
 endmethod
 
 define method .loadFromDB()
@@ -306,115 +323,98 @@ endmethod
 
 define method .afterSelectChange(!data is ARRAY)
   -- q var !data
--- q var !data[0]
--- q var !data[1]
--- q var !data[2]
--- q var !this.grid.GetSelectedRows()
--- q var !this.grid.SingleRowSelection()
--- q var !this.grid.getDataSource()
--- q var !this.grid.HeaderSort()
--- q var !this.grid.FixedRows()
--- q var !this.grid.getRow('1')
--- q var !this.grid.getrows()
--- q var !this.grid.getNumberRows()
--- q var !this.grid.getColumns()
---https://docs.aveva.com/bundle/e3d-design/page/911634.html
 endmethod
 
 define method .beforeCellUpdate(!data is ARRAY)
-	q var !data
-	!this.grid.doDabaconCellUpdate(!data)
-
+  q var !data
+  !this.grid.doDabaconCellUpdate(!data)
 endmethod
 
 define method .checkStatus()
   using namespace 'Aveva.Core.Presentation'
   !NumberOfRecords = !this.grid.getNumberRows()
   if !NumberOfRecords eq 0 then
-    !!alert.message('No data loaded. Please load data first.')
-    return
+    !!alert.error( |No data loaded. Please load data first.| )
+  else
+    !headers = object Array()
+    !headers.append('GPART')
+    !headers.append('GPART STATUS')
+    !headers.append('SCOM')
+    !headers.append('SCOM STATUS')
+    !headers.append('CATE')
+    !headers.append('CATE STATUS')
+
+    !this.statusRows = object Array()
+
+    DO !n FROM 1 TO !NumberOfRecords
+      !CurrentValues = !this.grid.getRow('$!n')
+      !RecGpart    = !CurrentValues[1]
+      !RecScom     = !CurrentValues[16]
+      !RecCateCode = !CurrentValues[14]
+
+      !gpartStatus = 'NEW'
+      /$!RecGpart
+      handle ANY
+      elsehandle none
+        !gpartStatus = 'EXIST'
+      endhandle
+
+      !scomStatus = 'NEW'
+      /$!RecScom
+      handle ANY
+      elsehandle none
+        !scomStatus = 'EXIST'
+      endhandle
+
+      !cateStatus = 'NEW'
+      /$!RecCateCode
+      handle ANY
+      elsehandle none
+        !cateStatus = 'EXIST'
+      endhandle
+
+      !row = object Array()
+      !row.append(!RecGpart)
+      !row.append(!gpartStatus)
+      !row.append(!RecScom)
+      !row.append(!scomStatus)
+      !row.append(!RecCateCode)
+      !row.append(!cateStatus)
+      !this.statusRows.append(!row)
+    ENDDO
+
+    !nds = object NETDATASOURCE('Status Check', !headers, !this.statusRows)
+    !this.resultGrid.clearGrid()
+    !this.resultGrid.BindToDataSource(!nds)
+    !this.resultGrid.autoFitColumns()
+    handle ANY
+    endhandle
   endif
-
-  !headers = object Array()
-  !headers.append('GPART')
-  !headers.append('GPART STATUS')
-  !headers.append('SCOM')
-  !headers.append('SCOM STATUS')
-  !headers.append('CATE')
-  !headers.append('CATE STATUS')
-
-  !this.statusRows = object Array()
-
-  DO !n FROM 1 TO !NumberOfRecords
-    !CurrentValues = !this.grid.getRow('$!n')
-    !RecGpart    = !CurrentValues[1]
-    !RecScom     = !CurrentValues[16]
-    !RecCateCode = !CurrentValues[14]
-
-    !gpartStatus = 'NEW'
-    /$!RecGpart
-    handle ANY
-    elsehandle none
-      !gpartStatus = 'EXIST'
-    endhandle
-
-    !scomStatus = 'NEW'
-    /$!RecScom
-    handle ANY
-    elsehandle none
-      !scomStatus = 'EXIST'
-    endhandle
-
-    !cateStatus = 'NEW'
-    /$!RecCateCode
-    handle ANY
-    elsehandle none
-      !cateStatus = 'EXIST'
-    endhandle
-
-    !row = object Array()
-    !row.append(!RecGpart)
-    !row.append(!gpartStatus)
-    !row.append(!RecScom)
-    !row.append(!scomStatus)
-    !row.append(!RecCateCode)
-    !row.append(!cateStatus)
-    !this.statusRows.append(!row)
-  ENDDO
-
-  !nds = object NETDATASOURCE('Status Check', !headers, !this.statusRows)
-  !this.resultGrid.clearGrid()
-  !this.resultGrid.BindToDataSource(!nds)
-  !this.resultGrid.autoFitColumns()
 endmethod
 
 define method .exportResults()
   if !this.statusRows.size() eq 0 then
-    !!alert.message('No status data. Run Check Status first.')
-    return
+    !!alert.error( |No status data. Run Check Status first.| )
+  else
+    import 'PMLFileBrowser'
+    handle ANY
+    endhandle
+    using namespace 'Aveva.Core.Presentation'
+    !browser = object PMLFILEBROWSER('SAVE')
+    !browser.show('C:\','status_check','Export Status',true,'CSV Files|*.csv',1)
+    !filePath = !browser.file()
+    if !filePath neq '' then
+      !lines = object Array()
+      !lines.append('GPART,GPART STATUS,SCOM,SCOM STATUS,CATE,CATE STATUS')
+      DO !n FROM 1 TO !this.statusRows.size()
+        !row = !this.statusRows[!n]
+        !line = !row[1] + ',' + !row[2] + ',' + !row[3] + ',' + $,
+                !row[4] + ',' + !row[5] + ',' + !row[6]
+        !lines.append(!line)
+      ENDDO
+      !file = object File(!filePath)
+      !file.WriteFile(!lines)
+      !!alert.error( |Export complete: $!!filePath| )
+    endif
   endif
-
-  import 'PMLFileBrowser'
-  handle ANY
-  endhandle
-  using namespace 'Aveva.Core.Presentation'
-  !browser = object PMLFILEBROWSER('SAVE')
-  !browser.show('C:\','status_check','Export Status',true,'CSV Files|*.csv',1)
-  !filePath = !browser.file()
-  if !filePath eq '' then
-    return
-  endif
-
-  !lines = object Array()
-  !lines.append('GPART,GPART STATUS,SCOM,SCOM STATUS,CATE,CATE STATUS')
-
-  DO !n FROM 1 TO !this.statusRows.size()
-    !row = !this.statusRows[!n]
-    !line = !row[1] + ',' + !row[2] + ',' + !row[3] + ',' + !row[4] + ',' + !row[5] + ',' + !row[6]
-    !lines.append(!line)
-  ENDDO
-
-  !file = object File(!filePath)
-  !file.WriteFile(!lines)
-  !!alert.message('Export complete: ' + !filePath)
 endmethod
