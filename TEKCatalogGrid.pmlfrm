@@ -84,71 +84,87 @@ define method .loadFromExcel()
 endmethod
 define method .control()
 	!NumberOfRecords = !this.grid.getNumberRows()
-	!HeaderItems = !this.grid.getColumns()
 
 	DO !n FROM 1 TO !NumberOfRecords
-		!CurrentValues = !this.grid.getRow('$!n')
-		!RecSectLevel = !CurrentValues[9]
-		!RecCate = !CurrentValues[10]
-		!RecScom = !CurrentValues[12]
-		!RecCommodity = !CurrentValues[5]
-		!RecGpartLevel = !CurrentValues[4]
-		!RecCommodityDesc = !CurrentValues[6]
-		!RecSch = !CurrentValues[7]
-		!RecSchDesc = !CurrentValues[8]
-		!RecGpart = !CurrentValues[1]
-		!RecGpartDesc = !CurrentValues[2]
-		!RecGtype = !CurrentValues[3]
-		!RecCateDesc = !CurrentValues[11]
+		!CurrentValues   = !this.grid.getRow('$!n')
+		!RecGpart        = !CurrentValues[1]
+		!RecGpartDesc    = !CurrentValues[2]
+		!RecGtype        = !CurrentValues[3]
+		!RecPrtwld       = !CurrentValues[4]
+		!RecPrtele1      = !CurrentValues[5]
+		!RecPrtele2      = !CurrentValues[6]
+		!RecPrtele3      = !CurrentValues[7]
+		!RecPrtele4      = !CurrentValues[8]
+		!RecPrtele4Desc  = !CurrentValues[9]
+		!RecPrtele5      = !CurrentValues[10]
+		!RecPrtele5Desc  = !CurrentValues[11]
+		!RecCata         = !CurrentValues[12]
+		!RecSect         = !CurrentValues[13]
+		!RecCateCode     = !CurrentValues[14]
+		!RecCateDesc     = !CurrentValues[15]
+		!RecScom         = !CurrentValues[16]
 
-		/$!RecCate
+		/$!RecCateCode
 		handle ANY
-			!this.catecreate(!RecCate,!RecGtype,!RecSectLevel,!RecCateDesc)
+			!this.catecreate(!RecCata,!RecSect,!RecCateCode,!RecCateDesc,!RecGtype)
 			/$!RecScom
 			handle ANY
-				!this.catescom(!RecCate,!RecScom,!RecGtype)
-				!this.gpartcreate(!RecScom ,!RecGpartLevel,!RecCommodity,!RecCommodityDesc,!RecSch,!RecSchDesc,!RecGpart,!RecGpartDesc,!RecGtype)
+				!this.catescom(!RecCateCode,!RecScom,!RecGtype)
+				!this.gpartcreate(!RecScom,!RecGpart,!RecGpartDesc,!RecPrtwld,!RecPrtele1,!RecPrtele2,!RecPrtele3,!RecPrtele4,!RecPrtele4Desc,!RecPrtele5,!RecPrtele5Desc)
 			elsehandle none
-				!This.scom[!This.sayScom] = !CurrentValues[12]
+				!This.scom[!This.sayScom] = !RecScom
 				!This.sayScom = !This.sayScom + 1
 			endhandle
 		elsehandle none
 			/$!RecScom
 			handle ANY
-				$P !RecScom
-				!this.catescom(!RecCate,!RecScom,!RecGtype)
-				!this.gpartcreate(!RecScom ,!RecGpartLevel,!RecCommodity,!RecCommodityDesc,!RecSch,!RecSchDesc,!RecGpart,!RecGpartDesc,!RecGtype)
+				!this.catescom(!RecCateCode,!RecScom,!RecGtype)
+				!this.gpartcreate(!RecScom,!RecGpart,!RecGpartDesc,!RecPrtwld,!RecPrtele1,!RecPrtele2,!RecPrtele3,!RecPrtele4,!RecPrtele4Desc,!RecPrtele5,!RecPrtele5Desc)
 			elsehandle none
-				!This.scom[!This.sayScom] = !CurrentValues[12]
+				!This.scom[!This.sayScom] = !RecScom
 				!This.sayScom = !This.sayScom + 1
-				!this.gpartcreate(!RecScom ,!RecGpartLevel,!RecCommodity,!RecCommodityDesc,!RecSch,!RecSchDesc,!RecGpart,!RecGpartDesc,!RecGtype)
+				!this.gpartcreate(!RecScom,!RecGpart,!RecGpartDesc,!RecPrtwld,!RecPrtele1,!RecPrtele2,!RecPrtele3,!RecPrtele4,!RecPrtele4Desc,!RecPrtele5,!RecPrtele5Desc)
 			endhandle
 		endhandle
 	ENDDO
 endmethod
-define method .gpartcreate(!RecScom is STRING,!RecGpartLevel is STRING,!RecCommodity is STRING,!RecCommodityDesc is STRING,!RecSch is STRING,!RecSchDesc is STRING,!RecGpart is STRING,!RecGpartDesc is STRING,!RecGtype is STRING)
-	-- Level 1: GTYPE PRTELE under PRTWLD-TEKCATALOG
-	/PRTWLD-TEKCATALOG
-	/$!RecGtype
+define method .gpartcreate(!RecScom is STRING,!RecGpart is STRING,!RecGpartDesc is STRING,!RecPrtwld is STRING,!RecPrtele1 is STRING,!RecPrtele2 is STRING,!RecPrtele3 is STRING,!RecPrtele4 is STRING,!RecPrtele4Desc is STRING,!RecPrtele5 is STRING,!RecPrtele5Desc is STRING)
+	-- Level 1 PRTELE under PRTWLD
+	/$!RecPrtele1
 	handle ANY
-		/PRTWLD-TEKCATALOG
-		NEW PRTELE /$!RecGtype
+		/$!RecPrtwld
+		NEW PRTELE /$!RecPrtele1
 		PURP PIPE
 	ENDHANDLE
-	-- Level 2: SCH PRTELE under GTYPE PRTELE
-	/$!RecSch
+	-- Level 2 PRTELE under PRTELE1
+	/$!RecPrtele2
 	handle ANY
-		/$!RecGtype
-		NEW PRTELE /$!RecSch
+		/$!RecPrtele1
+		NEW PRTELE /$!RecPrtele2
 		PURP PIPE
-		DESC '$!RecSchDesc'
 	ENDHANDLE
-	-- Level 3: GpartLevel PRTELE under SCH PRTELE
-	/$!RecGpartLevel
+	-- Level 3 PRTELE under PRTELE2
+	/$!RecPrtele3
 	handle ANY
-		/$!RecSch
-		NEW PRTELE /$!RecGpartLevel
+		/$!RecPrtele2
+		NEW PRTELE /$!RecPrtele3
 		PURP PIPE
+	ENDHANDLE
+	-- Level 4 PRTELE (COMMODITY) under PRTELE3
+	/$!RecPrtele4
+	handle ANY
+		/$!RecPrtele3
+		NEW PRTELE /$!RecPrtele4
+		PURP PIPE
+		DESC '$!RecPrtele4Desc'
+	ENDHANDLE
+	-- Level 5 PRTELE (COMwSCH) under PRTELE4 - direct parent of GPART
+	/$!RecPrtele5
+	handle ANY
+		/$!RecPrtele4
+		NEW PRTELE /$!RecPrtele5
+		PURP PIPE
+		DESC '$!RecPrtele5Desc'
 	ENDHANDLE
 	/$!RecGpart
 		handle ANY
@@ -173,59 +189,49 @@ define method .gpartcreate(!RecScom is STRING,!RecGpartLevel is STRING,!RecCommo
 			!This.sayGpart = !This.sayGpart + 1
 		ENDHANDLE
 endmethod
-define method .catecreate(!RecCate is STRING,!RecGtype is STRING,!RecSectLevel is STRING,!RecCateDesc is STRING )
-	/CATA-TEKCATALOG
-	/$!RecSectLevel
+define method .catecreate(!RecCata is STRING,!RecSect is STRING,!RecCateCode is STRING,!RecCateDesc is STRING,!RecGtype is STRING)
+	/$!RecSect
 	handle ANY
-		/CATA-TEKCATALOG
-		NEW SECT /$!RecSectLevel
+		/$!RecCata
+		NEW SECT /$!RecSect
 		PURP PIPE
 	ENDHANDLE
-	-- Category creation
-		NEW CATEGORY /$!RecCate
-		-- CATE DESC - HAZIR DESC
-			DESC '$!RecCateDesc'
-			-- PURP TUM PIPING ICIN COMP OLACAK
-			PURP COMP
-			-- GTYPE ICIN MAPPING VERILECEK
-			GTYP $!RecGtype
-		-- YENI CATE OLUSTURACAKSAM BOS BIR TEXT URETECEGIM
-			NEW TEXT /$!RecCate-PA1
-				STEX 'NOMINAL BORE'
-			END
-			-- YENI CATE OLUSTURACAKSAM BOS BIR SDTE URETECEGIM
-			NEW SDTEXT /$!RecCate-D
-			END
-			-- YENI CATE OLUSTURACAKSAM BOS BIR DTSE URETECEGIM
-			NEW DTSET /$!RecCate-DTSE
-			END
-		/$!RecCate-DTSE
-			NEW DATA /$!RecCate-DATA-PA1
-				DKEY APAR
-				PPRO ( ATTRIB PARA[1 ] )
-				PURP DATA
-				NUMB 1
-				DTIT 'NOMINAL SIZE'
-			END
-		/$!RecCate-DTSE
-		-- YENI CATE OLUSTURACAKSAM BOS BIR PTSE URETECEGIM
-			NEW PTSET /$!RecCate-P
-			END
-			NEW GMSET /$!RecCate-G
-			END
+	NEW CATEGORY /$!RecCateCode
+		DESC '$!RecCateDesc'
+		PURP COMP
+		GTYP $!RecGtype
+		NEW TEXT /$!RecCateCode-PA1
+			STEX 'NOMINAL BORE'
 		END
-		/$!RecCate
-			Ptref /$!RecCate-P
-			Dtref /$!RecCate-DTSE
-			Gmref /$!RecCate-G
-			Cdetail /$!RecCate-D
-	------------------------------------------------------
+		NEW SDTEXT /$!RecCateCode-D
+		END
+		NEW DTSET /$!RecCateCode-DTSE
+		END
+	/$!RecCateCode-DTSE
+		NEW DATA /$!RecCateCode-DATA-PA1
+			DKEY APAR
+			PPRO ( ATTRIB PARA[1 ] )
+			PURP DATA
+			NUMB 1
+			DTIT 'NOMINAL SIZE'
+		END
+	/$!RecCateCode-DTSE
+		NEW PTSET /$!RecCateCode-P
+		END
+		NEW GMSET /$!RecCateCode-G
+		END
+	END
+	/$!RecCateCode
+		Ptref /$!RecCateCode-P
+		Dtref /$!RecCateCode-DTSE
+		Gmref /$!RecCateCode-G
+		Cdetail /$!RecCateCode-D
 endmethod
 
-define method .catescom(!RecCate is STRING,!RecScom is STRING,!RecGtype is STRING)
+define method .catescom(!RecCateCode is STRING,!RecScom is STRING,!RecGtype is STRING)
 	/$!RecScom
 	handle ANY
-	/$!RecCate
+	/$!RecCateCode
 		!References= !!Collectallfor('GMSE BTSE PTSE SDTE DTSE','', !!CE)
 		Do !Reference values !References
 			if !Reference.type eq 'DTSE' then
@@ -244,11 +250,11 @@ define method .catescom(!RecCate is STRING,!RecScom is STRING,!RecGtype is STRIN
 		if !!ce.ptref.unset().not() then
 			!PTRE = !!ce.ptref.name
 		endif
-		if !!ce.Gmref.unset().not() then
-			!GMRE = !!ce.Gmref.name
+		if !!ce.gmref.unset().not() then
+			!GMRE = !!ce.gmref.name
 		endif
-		if !!ce.Dtref.unset().not() then
-			!DTRE = !!ce.Dtref.name
+		if !!ce.dtref.unset().not() then
+			!DTRE = !!ce.dtref.name
 		endif
 		ONERROR GOLABEL /ERROR3
 		INPUT BEGIN
@@ -341,9 +347,9 @@ define method .checkStatus()
 
   DO !n FROM 1 TO !NumberOfRecords
     !CurrentValues = !this.grid.getRow('$!n')
-    !RecGpart = !CurrentValues[1]
-    !RecScom  = !CurrentValues[12]
-    !RecCate  = !CurrentValues[10]
+    !RecGpart    = !CurrentValues[1]
+    !RecScom     = !CurrentValues[16]
+    !RecCateCode = !CurrentValues[14]
 
     !gpartStatus = 'NEW'
     /$!RecGpart
@@ -360,7 +366,7 @@ define method .checkStatus()
     endhandle
 
     !cateStatus = 'NEW'
-    /$!RecCate
+    /$!RecCateCode
     handle ANY
     elsehandle none
       !cateStatus = 'EXIST'
@@ -371,7 +377,7 @@ define method .checkStatus()
     !row.append(!gpartStatus)
     !row.append(!RecScom)
     !row.append(!scomStatus)
-    !row.append(!RecCate)
+    !row.append(!RecCateCode)
     !row.append(!cateStatus)
     !this.statusRows.append(!row)
   ENDDO
