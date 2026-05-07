@@ -6,7 +6,6 @@ setup form !!TEKCatalogGrid dialog docking
 
   !this.formTitle = |TEK Catalog Grid|
   !this.initcall   = |!this.init()|
-  !this.resizecall = |!this.onResize()|
 
   !this.newMenu(|gridPopup|)
   !this.gridPopup.add('CALLBACK', 'Import from Excel...', '!this.loadFromExcel()')
@@ -398,13 +397,6 @@ define method .checkStatus()
     handle ANY
     endhandle
   endif
-endmethod
-
-define method .onResize()
-  handle ANY
-  endhandle
-  !this.grid.autoFitColumns()
-  !this.resultGrid.autoFitColumns()
 endmethod
 
 define method .exportResults()
