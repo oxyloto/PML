@@ -1,0 +1,302 @@
+setup form !!SYExampleGridControl dialog docking
+  import 'GridControl'
+  handle ANY
+  endhandle
+  using namespace 'Aveva.Core.Presentation'
+  
+  !this.formTitle = |Example .NET Grid Control Import|
+  !this.initcall  = |!this.init()|
+  
+  !this.newMenu(|gridPopup|)
+  !this.gridPopup.add('CALLBACK', 'Import from Excel...', '!this.loadFromExcel()')
+  !this.gridPopup.add('CALLBACK', 'Import from TXT...', '!this.loadFromTXT()')
+  !this.gridPopup.add('CALLBACK', 'Import from DB...', '!this.loadFromDB()')
+  container .gridFrame NOBOX PMLNETCONTROL 'grid' anchor all width 60 height 20
+  path down
+  button .load |Create...| at x 0 ymax call |!this.control()| wid 8
+  member .grid     is NETGRIDCONTROL
+  member .elements is ARRAY
+  member .cate is ARRAY
+  member .scom is ARRAY
+  member .commodity is ARRAY
+  member .gpart is ARRAY
+  member .sayScom is REAL
+  member .sayGpart is REAL
+exit
+
+define method .SYExampleGridControl()
+  using namespace 'Aveva.Core.Presentation'
+  !this.grid = object NetGridControl() 
+  !this.gridFrame.control = !this.grid.handle()
+  !this.grid.addeventhandler('OnPopup', !this, 'rightClickGrid')
+  !this.grid.addeventhandler('AfterSelectChange', !this, 'afterSelectChange')
+  !this.grid.addeventhandler('BeforeCellUpdate', !this, 'beforeCellUpdate')
+endmethod
+
+define method .init()  
+  using namespace  'Aveva.Core.Presentation'  
+  !this.grid.columnExcelFilter(TRUE)
+  !this.grid.setNameColumnImage()
+  !this.grid.outlookGroupStyle(TRUE)
+  !this.grid.fixedHeaders(FALSE)
+  !this.grid.fixedRows(FALSE)
+  !this.grid.columnSummaries(TRUE)
+  !this.grid.autoFitColumns()
+  !this.grid.editableGrid(TRUE)
+endmethod
+
+define method .rightClickGrid(!data is ARRAY)
+  !this.gridFrame.popup = !this.gridPopup
+  !this.gridFrame.showPopup(!data[0], !data[1]) 
+  !this.elements = !data[2]
+  handle ANY
+  endhandle
+endmethod
+
+define method .loadFromExcel()
+   import 'PMLFileBrowser'
+   handle ANY
+   endhandle
+   using namespace 'Aveva.Core.Presentation'
+   !browser = object PMLFILEBROWSER('OPEN')
+   !browser.show('C:\','','Load Grid from Excel',true, 'Excel Documents|*.xlsx',1)
+   !this.grid.clearGrid()
+   !nds = object NETDATASOURCE('Grid Control Example', !browser.file())
+   !this.grid.BindToDataSource(!nds)
+   handle ANY
+	!!alert.error ( |The Gpart list can not be read!| )
+   elsehandle none
+	!This.sayScom = 1
+	!This.sayGpart = 1
+   endhandle
+endmethod
+define method .control()
+	!NumberOfRecords = !this.grid.getNumberRows()
+	!HeaderItems = !this.grid.getColumns()
+	
+	DO !n FROM 1 TO !NumberOfRecords
+		!CurrentValues = !this.grid.getRow('$!n')
+		!RecSectLevel = !CurrentValues[9]
+		!RecCate = !CurrentValues[10]
+		!RecScom = !CurrentValues[12]
+		!RecCommodity = !CurrentValues[5]
+		!RecGpartLevel = !CurrentValues[4]
+		!RecCommodityDesc = !CurrentValues[6]
+		!RecSch = !CurrentValues[7]
+		!RecSchDesc = !CurrentValues[8]
+		!RecGpart = !CurrentValues[1]
+		!RecGpartDesc = !CurrentValues[2]
+		!RecGtype = !CurrentValues[3]
+		!RecCateDesc = !CurrentValues[11]
+		
+		/$!RecCate
+		handle ANY
+			!this.catecreate(!RecCate,!RecGtype,!RecSectLevel,!RecCateDesc)
+			/$!RecScom
+			handle ANY
+				!this.catescom(!RecCate,!RecScom,!RecGtype)
+				!this.gpartcreate(!RecScom ,!RecGpartLevel,!RecCommodity,!RecCommodityDesc,!RecSch,!RecSchDesc,!RecGpart,!RecGpartDesc)
+			elsehandle none
+				!This.scom[!This.sayScom] = !CurrentValues[12]
+				!This.sayScom = !This.sayScom + 1
+			endhandle
+		elsehandle none
+			/$!RecScom
+			handle ANY
+				$P !RecScom
+				!this.catescom(!RecCate,!RecScom,!RecGtype)
+				!this.gpartcreate(!RecScom ,!RecGpartLevel,!RecCommodity,!RecCommodityDesc,!RecSch,!RecSchDesc,!RecGpart,!RecGpartDesc)
+			elsehandle none
+				!This.scom[!This.sayScom] = !CurrentValues[12]
+				!This.sayScom = !This.sayScom + 1
+				!this.gpartcreate(!RecScom ,!RecGpartLevel,!RecCommodity,!RecCommodityDesc,!RecSch,!RecSchDesc,!RecGpart,!RecGpartDesc)
+			endhandle
+		endhandle
+	ENDDO
+endmethod
+define method .gpartcreate(!RecScom is STRING,!RecGpartLevel is STRING,!RecCommodity is STRING,!RecCommodityDesc is STRING,!RecSch is STRING,!RecSchDesc is STRING,!RecGpart is STRING,!RecGpartDesc is STRING)
+	/$!RecGpartLevel
+	handle ANY
+		NEW PRTELE /$!RecGpartLevel
+		PURP PIPE
+	ENDHANDLE
+	/$!RecCommodity
+	handle ANY
+		NEW PRTELE /$!RecCommodity
+		PURP PIPE
+		DESC '$!RecCommodityDesc'
+	ENDHANDLE
+	/$!RecSch
+	handle ANY
+		NEW PRTELE /$!RecSch
+		PURP PIPE
+		DESC '$!RecSchDesc'
+	ENDHANDLE
+	/$!RecGpart
+		handle ANY
+			!References= !!Collectallfor('GPART','', !!CE)
+			if !References.size() gt 0 then
+				!RefDETR = !References[1].DETR.name
+				!RefMATX = !References[1].MATX.name
+			endif
+			NEW GPART /$!RecGpart
+			DESC '$!RecGpartDesc'
+			END
+			OLD GPART /$!RecGpart
+			--- SCOM BILDIGISI GPART BAZLI GELMELI
+			CATR SCOMPONENT /$!RecScom
+			--DETR VE MATX BILGISI EGER PRTELE ALTINDA VAR OLAN GPART VAR ISE ORADAKI DETR VE MATX KULLANILACAK
+			if !References.size() gt 0 then
+				DETR SDTEXT /$!RefDETR
+				MATX SMTEXT /$!RefMATX
+			endif
+		elsehandle none
+			!This.gpart[!This.sayGpart] = '$!RecGpart'
+			!This.sayGpart = !This.sayGpart + 1
+		ENDHANDLE
+endmethod
+define method .catecreate(!RecCate is STRING,!RecGtype is STRING,!RecSectLevel is STRING,!RecCateDesc is STRING )
+	/$!RecSectLevel
+	handle ANY
+		NEW SECT /$!RecSectLevel
+		PURP PIPE
+	ENDHANDLE
+	-- Category creation
+		NEW CATEGORY /$!RecCate
+		-- CATE DESC - HAZIR DESC
+			DESC '$!RecCateDesc'
+			-- PURP TUM PIPING ICIN COMP OLACAK
+			PURP COMP
+			-- GTYPE ICIN MAPPING VERILECEK
+			GTYP $!RecGtype
+		-- YENI CATE OLUSTURACAKSAM BOS BIR TEXT URETECEGIM
+			NEW TEXT /$!RecCate-PA1
+				STEX 'NOMINAL BORE'
+			END
+			-- YENI CATE OLUSTURACAKSAM BOS BIR SDTE URETECEGIM
+			NEW SDTEXT /$!RecCate-D
+			END
+			-- YENI CATE OLUSTURACAKSAM BOS BIR DTSE URETECEGIM
+			NEW DTSET /$!RecCate-DTSE
+			END
+		/$!RecCate-DTSE
+			NEW DATA /$!RecCate-DATA-PA1
+				DKEY APAR
+				PPRO ( ATTRIB PARA[1 ] )
+				PURP DATA
+				NUMB 1
+				DTIT 'NOMINAL SIZE'
+			END
+		/$!RecCate-DTSE
+		-- YENI CATE OLUSTURACAKSAM BOS BIR PTSE URETECEGIM
+			NEW PTSET /$!RecCate-P
+			END
+			NEW GMSET /$!RecCate-G
+			END
+		END
+		/$!RecCate
+			Ptref /$!RecCate-P
+			Dtref /$!RecCate-DTSE
+			Gmref /$!RecCate-G
+			Cdetail /$!RecCate-D
+	------------------------------------------------------
+endmethod
+
+define method .catescom(!RecCate is STRING,!RecScom is STRING,!RecGtype is STRING)
+	/$!RecScom
+	handle ANY
+	/$!RecCate
+		!References= !!Collectallfor('GMSE BTSE PTSE SDTE DTSE','', !!CE)
+		Do !Reference values !References
+			if !Reference.type eq 'DTSE' then
+				!DTRE = !Reference.name
+			endif
+			if !Reference.type eq 'PTSE' then
+				!PTRE = !Reference.name
+			endif
+			if !Reference.type eq 'GMSE' then
+				!GMRE = !Reference.name
+			endif
+			if !Reference.type eq 'BTSE' then
+				!Blrfarray = !Reference.name
+			endif
+		enddo
+		if !!ce.ptref.unset().not() then
+			!PTRE = !!ce.ptref.name
+		endif
+		if !!ce.Gmref.unset().not() then
+			!GMRE = !!ce.Gmref.name
+		endif
+		if !!ce.Dtref.unset().not() then
+			!DTRE = !!ce.Dtref.name
+		endif
+		ONERROR GOLABEL /ERROR3
+		INPUT BEGIN
+			NEW SCOMPONENT /$!RecScom
+				GTYP $!RecGtype
+			END
+			OLD SCOMPONENT /$!RecScom
+			-- BUNLARIN TAMAMI CATE'DEN GELECEK, CATE HANGILERINE BAGLIYSA ORADAN ALACAK
+			PTRE PTSET $!PTRE
+			GMRE GMSET $!GMRE
+			DTRE DTSET $!DTRE
+			INPUT END  SCOMPONENT /$!RecScom
+			INPUT FINISH
+		-- Switch synonyms back on if an error occurs.
+		LABEL /ERROR3
+		handle ANY
+		$S+
+		RETURN ERROR
+		endhandle
+	endhandle
+endmethod
+define method .loadFromTXT()
+   import 'PMLFileBrowser'
+   handle ANY
+   endhandle
+   using namespace 'Aveva.Core.Presentation' 
+	!browser = object PMLFILEBROWSER('OPEN')
+	!browser.show('C:\','','Load Grid from TXT',true, 'TXT Documents|*.txt',1)
+	!this.grid.clearGrid()
+	!file = object File(!browser.file())
+	!lines = !file.ReadFile()
+	!data = Array()
+	do !i Index !lines
+		skip if (!i eq 1 ) 
+		!line = !lines[!i].Split()
+		!data.Append(!line)
+	enddo
+   !nds = object NETDATASOURCE('Grid Control Example', !lines[1].Split() , !data)
+	!this.grid.BindToDataSource(!nds)
+endmethod
+
+define method .loadFromDB()
+  using namespace 'Aveva.Core.Presentation'
+  !headings = |Name Type Owner Description|
+  var !data collect all ZONE
+  !nds = object NETDATASOURCE('Grid Control Example', !headings.split(), !data)
+  !this.grid.bindToDataSource(!nds)  
+endmethod
+
+define method .afterSelectChange(!data is ARRAY)
+  -- q var !data
+-- q var !data[0]
+-- q var !data[1]
+-- q var !data[2]
+-- q var !this.grid.GetSelectedRows()
+-- q var !this.grid.SingleRowSelection()
+-- q var !this.grid.getDataSource()
+-- q var !this.grid.HeaderSort()
+-- q var !this.grid.FixedRows()
+-- q var !this.grid.getRow('1')
+-- q var !this.grid.getrows()
+-- q var !this.grid.getNumberRows()
+-- q var !this.grid.getColumns()
+--https://docs.aveva.com/bundle/e3d-design/page/911634.html
+endmethod
+
+define method .beforeCellUpdate(!data is ARRAY)
+	q var !data
+	!this.grid.doDabaconCellUpdate(!data)
+
+endmethod
