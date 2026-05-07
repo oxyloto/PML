@@ -11,12 +11,12 @@ setup form !!TEKCatalogGrid dialog docking
   !this.gridPopup.add('CALLBACK', 'Import from Excel...', '!this.loadFromExcel()')
   !this.gridPopup.add('CALLBACK', 'Import from TXT...', '!this.loadFromTXT()')
   !this.gridPopup.add('CALLBACK', 'Import from DB...', '!this.loadFromDB()')
-  container .gridFrame NOBOX PMLNETCONTROL 'grid' anchor left right top width 60 height 20
+  container .gridFrame NOBOX PMLNETCONTROL 'grid' anchor all width 60 height 20
   path down
-  button .load |Create...| at x 0 ymax call |!this.control()| wid 8
-  button .check |Check Status| at xmax ymin call |!this.checkStatus()| wid 12
-  button .exportBtn |Export...| at xmax ymin call |!this.exportResults()| wid 10
-  container .resultFrame NOBOX PMLNETCONTROL 'resultGrid' at x 0 ymax anchor left right bottom width 60 height 10
+  button .load     |Create...|      at x 0    ymax call |!this.control()|      wid 8
+  button .check    |Check Status|   at xmax   ymin call |!this.checkStatus()|  wid 12
+  button .exportBtn |Export...|     at xmax   ymin call |!this.exportResults()| wid 10
+  container .resultFrame NOBOX PMLNETCONTROL 'resultGrid' at x 0 ymax width 60 height 10
   member .grid        is NETGRIDCONTROL
   member .resultGrid  is NETGRIDCONTROL
   member .statusRows  is ARRAY
